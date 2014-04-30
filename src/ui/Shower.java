@@ -21,7 +21,7 @@ import calculate.Creator;
 //XXX: should/can the Thread bit be separated from the UI bit?
 public class Shower extends Thread {
 
-    private static final int FRAME_MILLIS = 200;
+    private int FRAME_MILLIS = 256;
 
     NoiseMachine noiseMachine;
     Creator creator;
@@ -114,7 +114,7 @@ public class Shower extends Thread {
         frame.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent event) {
-                if (event.getKeyChar() == 'i') {
+                if (event.getKeyChar() == 'p') {
                     showImage = !showImage;
                     theBigPicture.setVisible(showImage);
                 }
@@ -135,6 +135,29 @@ public class Shower extends Thread {
                 if (event.getKeyChar() == 'j') {
                     noiseMachine.changeInstrumentRight();
                     instrumentLabel.setText(""+noiseMachine.getCurrentInstrument());
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == 'i') {
+                    FRAME_MILLIS>>=1;  
+                    p.p(FRAME_MILLIS);
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == 'k') {
+                    if (FRAME_MILLIS == 0) {
+                        FRAME_MILLIS = 1;
+                        p.p(FRAME_MILLIS);
+                    } else if (FRAME_MILLIS < Integer.MAX_VALUE) {
+                        FRAME_MILLIS<<=1;
+                        p.p(FRAME_MILLIS);
+                    }
                 }
             }
         });
@@ -185,7 +208,7 @@ public class Shower extends Thread {
                     play = false;
                 }
                 justFuckOffAndSleep(Math.max(FRAME_MILLIS + (int)(System.currentTimeMillis() - then), 0));
-                System.out.println(System.currentTimeMillis() - then + " " + i);
+                //System.out.println(System.currentTimeMillis() - then + " " + i);
             }
         }
     }
@@ -208,4 +231,13 @@ public class Shower extends Thread {
         return i;
     }
     
+    public static final class p {
+        public static void p(String out) {
+            System.out.println(out);
+        }
+
+        public static void p(int out) {
+            p.p(""+out);
+        }
+    }
 }
