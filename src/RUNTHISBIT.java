@@ -7,8 +7,8 @@ import ui.Shower;
 
 public class RUNTHISBIT {
 
-	public static void main(String[] args) throws IOException, InterruptedException, MidiUnavailableException {
-		Shower.main(null);
-	}
+    public static void main(String[] args) throws IOException, InterruptedException, MidiUnavailableException {
+        Shower.main(null);
+    }
 
 }
