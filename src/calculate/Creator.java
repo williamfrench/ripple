@@ -20,7 +20,7 @@ public class Creator {
     private static final int[][] neighbours = new int[][] {
         new int[]{0,0},
         new int[]{1,0}, new int[]{-1,0}, new int[]{0,1}, new int[]{0,-1},
-        //new int[]{1,1}, new int[]{-1,1}, new int[]{1,-1}, new int[]{-1,-1},
+        new int[]{1,1}, new int[]{-1,1}, new int[]{1,-1}, new int[]{-1,-1},
         //new int[]{2,0}, new int[]{-2,0}, new int[]{0,2}, new int[]{0,-2}
     };
     
@@ -36,6 +36,8 @@ public class Creator {
     private Pixmap currentPixmap;
     private Set<List<Integer>> divisorPairs;
     private int N;
+    private boolean showUnsuprising = true;
+    private boolean showSuprising = true;
     
     //could I preempt the need for this synchronized keyword?
     private synchronized BufferedImage paint() {
@@ -101,7 +103,7 @@ public class Creator {
             doStuff(divisorPair, INTERSECTION);
         }
         
-        if (!divisorPairs.isEmpty()) {
+        if (!divisorPairs.isEmpty() && showSuprising) {
             //System.out.println(N + " " + divisorPairs);
             for (List<Integer> divisorPair : divisorPairs) {
                 //XXX copy and paste aaaah
@@ -117,9 +119,11 @@ public class Creator {
     }
     
     private void doStuff(DivisorPair divisorPair, Color divisorColor) {
-        for (int[] coords : neighbours) {
-            currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], divisorColor);
-            currentPixmap.setColor(divisorPair.b-1+coords[0], divisorPair.a-1+coords[1], divisorColor);
+        if (showUnsuprising) {
+            for (int[] coords : neighbours) {
+                currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], divisorColor);
+                currentPixmap.setColor(divisorPair.b-1+coords[0], divisorPair.a-1+coords[1], divisorColor);
+            }
         }
         divisorPairs.remove(Arrays.asList(divisorPair.a, divisorPair.b));
         divisorPairs.remove(Arrays.asList(divisorPair.b, divisorPair.a));
@@ -134,7 +138,8 @@ public class Creator {
         };
         
     }
-
+    
+    //XXX: should these really be returning paint()?
     public BufferedImage setN(int N){
         this.N = N;
         return paint();
@@ -142,6 +147,16 @@ public class Creator {
     
     public BufferedImage cycleColor() {
         colorPicker.cycleColorCircle();
+        return paint();
+    }
+    
+    public BufferedImage toggleUnsuprising() {
+        showUnsuprising = !showUnsuprising;
+        return paint();
+    }
+    
+    public BufferedImage toggleSuprising() {
+        showSuprising  = !showSuprising;
         return paint();
     }
     

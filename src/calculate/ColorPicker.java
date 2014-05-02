@@ -10,7 +10,7 @@ public class ColorPicker {
     
     private static final Color[][] colorCircles = new Color[][] {
         new Color[]{Color.black, Color.black},
-        new Color[]{Color.yellow, Color.cyan, Color.magenta,Color.yellow},
+        new Color[]{Color.yellow, Color.cyan, Color.magenta, Color.yellow},
         new Color[]{Color.red, Color.blue, Color.green, Color.red}
     };
     

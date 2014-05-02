@@ -21,15 +21,14 @@ import calculate.Creator;
 //XXX: should/can the Thread bit be separated from the UI bit?
 public class Shower extends Thread {
 
-    private int FRAME_MILLIS = 256;
-
-    NoiseMachine noiseMachine;
-    Creator creator;
-    
+    private final NoiseMachine noiseMachine;
+    private final Creator creator;
     private final JLabel theBigPicture;
     private final JLabel instrumentLabel;
     private final NumberShower numberShower;
     private final JFrame masterFrame;
+    
+    private int FRAME_MILLIS = 256;
     private boolean play = false;
     private boolean showImage = true;
     private int i = 1;
@@ -161,6 +160,23 @@ public class Shower extends Thread {
                 }
             }
         });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == 'u') {
+                    theBigPicture.setIcon(new ImageIcon(creator.toggleUnsuprising()));
+                }
+            }
+            
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == 'o') {
+                    theBigPicture.setIcon(new ImageIcon(creator.toggleSuprising()));
+                }
+            }
+        });
         frame.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
@@ -186,7 +202,7 @@ public class Shower extends Thread {
         numberShower.showNumber(N, primeDivisors);
         if (showImage) {
             ImageIcon icon = new ImageIcon(creator.setN(N));
-            theBigPicture.setIcon(icon);
+            theBigPicture.setIcon(icon);        
         }
     }
     
