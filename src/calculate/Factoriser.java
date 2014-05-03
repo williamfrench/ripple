@@ -90,7 +90,6 @@ public class Factoriser {
     public static GeneratedDivisorPairs generateDivisorPairs(int number) {
         List<Divisor> divisors = generateDivisors(number);
         Set<DivisorPair> allDivisorPairs = new HashSet<DivisorPair>();
-        Set<DivisorPair> intersectedDivisorPairs = new HashSet<DivisorPair>();
         DivisorPairWithPrimes divisorPairWithPrimes = new DivisorPairWithPrimes();
         for (Divisor divisor : divisors) {
             int remainder = number/(divisor.divisor);
