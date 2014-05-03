@@ -177,6 +177,14 @@ public class Shower extends Thread {
                 }
             }
         });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == 't') {
+                    theBigPicture.setIcon(new ImageIcon(creator.cycleThickness()));
+                }
+            }
+        });
         frame.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {

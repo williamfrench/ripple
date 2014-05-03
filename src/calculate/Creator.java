@@ -13,23 +13,17 @@ import calculate.Factoriser.DivisorPair;
 
 public class Creator {
 
-    private static final Color INTERSECTION = Color.black;
-    private static final Color SUPRISE = Color.white;
-    private static final Color NO_BACKGROUND = Color.gray;
+    private static final Color INTERSECTION_COLOR = Color.black;
+    private static final Color SUPRISE_COLOR = Color.white;
+    private static final Color NO_BACKGROUND_COLOR = Color.gray;
     
-    private static final int[][] neighbours = new int[][] {
+    private static final int[][] possibleNeighbours = new int[][] {
         new int[]{0,0},
         new int[]{1,0}, new int[]{-1,0}, new int[]{0,1}, new int[]{0,-1},
         new int[]{1,1}, new int[]{-1,1}, new int[]{1,-1}, new int[]{-1,-1},
-        //new int[]{2,0}, new int[]{-2,0}, new int[]{0,2}, new int[]{0,-2}
+        new int[]{2,0}, new int[]{-2,0}, new int[]{0,2}, new int[]{0,-2}
     };
     
-    private static final int[][] moreNeighbours = new int[][] {
-        new int[]{0,0},
-        new int[]{1,0}, new int[]{-1,0}, new int[]{0,1}, new int[]{0,-1},
-        //new int[]{1,1}, new int[]{-1,1}, new int[]{1,-1}, new int[]{-1,-1},
-        //new int[]{2,0}, new int[]{-2,0}, new int[]{0,2}, new int[]{0,-2}
-    };
     
     private final ColorPicker colorPicker = new ColorPicker();
     
@@ -38,6 +32,8 @@ public class Creator {
     private int N;
     private boolean showUnsuprising = true;
     private boolean showSuprising = true;
+    private int thickness = 3;
+    private int[][] neighbours = Arrays.copyOf(possibleNeighbours, 9);
     
     //could I preempt the need for this synchronized keyword?
     private synchronized BufferedImage paint() {
@@ -78,7 +74,7 @@ public class Creator {
                 if (!colorPicker.noBackground()) {
                     color = triangle[row-1][col-1];
                 } else {
-                    color = Color.gray;
+                    color = NO_BACKGROUND_COLOR;
                 }
 
                 currentPixmap.setColor(row-1, col-1, color);
@@ -100,7 +96,7 @@ public class Creator {
         }
         
         for (DivisorPair divisorPair: Factoriser.generateDivisorPairs(N).get(1)) {
-            doStuff(divisorPair, INTERSECTION);
+            doStuff(divisorPair, INTERSECTION_COLOR);
         }
         
         if (!divisorPairs.isEmpty() && showSuprising) {
@@ -108,10 +104,10 @@ public class Creator {
             for (List<Integer> divisorPair : divisorPairs) {
                 //XXX copy and paste aaaah
                 for (int[] coords : neighbours) {
-                    currentPixmap.setColor(divisorPair.get(0)-1+coords[0], divisorPair.get(1)-1+coords[1], SUPRISE);
-                    currentPixmap.setColor(divisorPair.get(1)-1+coords[0], divisorPair.get(0)-1+coords[1], SUPRISE);
-                    currentPixmap.setColor(N-divisorPair.get(0)-1+coords[0], N-divisorPair.get(1)-1+coords[1], SUPRISE);
-                    currentPixmap.setColor(N-divisorPair.get(1)-1+coords[0], N-divisorPair.get(0)-1+coords[1], SUPRISE);
+                    currentPixmap.setColor(divisorPair.get(0)-1+coords[0], divisorPair.get(1)-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(divisorPair.get(1)-1+coords[0], divisorPair.get(0)-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(N-divisorPair.get(0)-1+coords[0], N-divisorPair.get(1)-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(N-divisorPair.get(1)-1+coords[0], N-divisorPair.get(0)-1+coords[1], SUPRISE_COLOR);
                 }
             }
         }
@@ -140,6 +136,7 @@ public class Creator {
     }
     
     //XXX: should these really be returning paint()?
+    /////////////////////////////////////////////////////////
     public BufferedImage setN(int N){
         this.N = N;
         return paint();
@@ -159,6 +156,17 @@ public class Creator {
         showSuprising  = !showSuprising;
         return paint();
     }
+    
+    public BufferedImage cycleThickness() {
+        if (++thickness > 4) {
+            thickness = 1; 
+        }
+        int length = 1 + (thickness-1)*4;
+        neighbours = Arrays.copyOf(possibleNeighbours, length);
+        return paint();
+    }
+    
+    ////////////////////////////////////////////////////////
     
     public void writeToFile() throws IOException {
         writeToFile("C:\\Users\\William\\Desktop\\ripple\\" + N + ".png");
