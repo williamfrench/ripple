@@ -19,6 +19,7 @@ import sound.NoiseMachine;
 import calculate.Creator;
 
 //XXX: should/can the Thread bit be separated from the UI bit?
+//XXX: what needs to be synchronized?
 public class Shower extends Thread {
 
     private final NoiseMachine noiseMachine;

@@ -4,6 +4,9 @@ import static calculate.SmallPrimes.someSmallPrimes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +14,7 @@ public class Factoriser {
 
     //TODO: replace second list with a Pair
     /** keeps quiet about any prime > sqrt(n)*/
-    public static List<List<Integer>> factorise(int number) {
+    private static List<List<Integer>> factorise(int number) {
         List<List<Integer>> result = new ArrayList<List<Integer>>();
         int index = 0;
         int n = number; int curPrime = someSmallPrimes[index];
@@ -35,50 +38,89 @@ public class Factoriser {
         return result;
     }
     
-    //XXX: hacky return type
-    public static List<Set<DivisorPair>> generateDivisorPairs(int number) {
-        Set<DivisorPair> results = new HashSet<DivisorPair>();
-        Set<DivisorPair> globallyDuped = new HashSet<DivisorPair>();
+    private static class Divisor {        
+        public Divisor(int divisor, int prime) {
+            this.divisor = divisor;
+            this.prime = prime;
+        }
+        
+        final int divisor;
+        final int prime;
+        
+        @Override
+        public String toString() {
+            return divisor + " " + prime;
+        }
+    }
+    
+    private static final Comparator<Divisor> divisorComparitor = new Comparator<Divisor>() {
+        @Override
+        public int compare(Divisor o1, Divisor o2) {
+            return o1.divisor - o2.divisor;
+        }
+    };
+    
+    /**
+     * only ones <= sqrt(N)
+     */
+    private static List<Divisor> generateDivisors(int number) {
         List<List<Integer>> factorised = factorise(number);
-        for (int k=0; k<factorised.size(); k++) {
-            int prime = factorised.get(k).get(0);
-            int exponent =  factorised.get(k).get(1);
-            int power = 1;
-            Set<DivisorPair> resultForPrime = new HashSet<DivisorPair>();
-            for (int i=1; i<=exponent; i++) {
-                power*=prime;
-                if (power*power >  number) {
-                    break;
-                }
-                int quotient = number/power;
-                for (int a=quotient; a<number; a+=quotient) {
-                    for (int b=power; b<number; b+=power) {
-                        //not too efficient:
-                        resultForPrime.add(new DivisorPair(a,b,prime));
+        List<Divisor> divisors = new ArrayList<Divisor>(Arrays.asList(new Divisor(1,-1)));
+        for (List<Integer> tuple : factorised) {
+            List<Divisor> newDivisors = new ArrayList<Divisor>();
+            int primePower = 1;
+            for (int i=0; i<=tuple.get(1); i++) {
+                primePower*=tuple.get(0);
+                for (Divisor divisor : divisors) {
+                    int product = divisor.divisor*primePower;
+                    if (product*product > number) {
+                        break;
                     }
+                    int prime = divisor.divisor == 1 ? tuple.get(0) : -1 ;//I might forget what this means
+                    Divisor newDivisor = new Divisor(product, prime);
+                    newDivisors.add(newDivisor);
                 }
             }
-            for (DivisorPair result : resultForPrime) {
-                if (!globallyDuped.contains(result)) {
-                    if (!results.add(result)) {
-                        results.remove(result);
-                        globallyDuped.add(result);
+            divisors.addAll(newDivisors);
+            Collections.sort(divisors, divisorComparitor);
+        }
+        return divisors;
+    }
+    
+    public static GeneratedDivisorPairs generateDivisorPairs(int number) {
+        List<Divisor> divisors = generateDivisors(number);
+        Set<DivisorPair> allDivisorPairs = new HashSet<DivisorPair>();
+        Set<DivisorPair> intersectedDivisorPairs = new HashSet<DivisorPair>();
+        DivisorPairWithPrimes divisorPairWithPrimes = new DivisorPairWithPrimes();
+        for (Divisor divisor : divisors) {
+            int remainder = number/(divisor.divisor);
+            for (int a = divisor.divisor; a < number; a+=divisor.divisor) {
+                for (int b = remainder; b < number; b+=remainder) {
+                    if (divisor.prime != -1) {
+                        DivisorPairWithPrime divisorPair = new DivisorPairWithPrime(a, b, divisor.prime);
+                        allDivisorPairs.add(divisorPair);
+                        divisorPairWithPrimes.add(divisorPair);
+                    }
+                    else {
+                        allDivisorPairs.add(new DivisorPair(a,b));
                     }
                 }
             }
         }
-        return Arrays.asList(results, globallyDuped);
+        Set<DivisorPairWithPrime> divisorPairWithPrimeSet = divisorPairWithPrimes.getDistinct();
+        Set<DivisorPair> intersectionSet = divisorPairWithPrimes.getIntersection();
+        allDivisorPairs.removeAll(divisorPairWithPrimeSet);
+        allDivisorPairs.removeAll(intersectionSet);
+        return new GeneratedDivisorPairs(divisorPairWithPrimeSet, intersectionSet, allDivisorPairs);
     }
 
     public static class DivisorPair {
         public final int a;
         public final int b;
-        public final int primeResponsible;
 
-        public DivisorPair(int a, int b, int primeResponsible) {
+        public DivisorPair(int a, int b) {
             this.a = Math.min(a, b);
             this.b = Math.max(a, b);
-            this.primeResponsible = primeResponsible;
         }
         
         @Override
@@ -95,7 +137,67 @@ public class Factoriser {
         
         @Override
         public String toString() {
-            return a + " " + b + " " + primeResponsible;
+            return a + " " + b;
         }
+    }
+        
+    public static class DivisorPairWithPrime extends DivisorPair {
+        public final int primeResponsible;
+
+        public DivisorPairWithPrime(int a, int b, int primeResponsible) {
+            super(a, b);
+            this.primeResponsible = primeResponsible;
+        }
+    }
+    
+    private static class DivisorPairWithPrimes {
+        HashMap<Integer, Set<DivisorPairWithPrime>> primeToSet = new HashMap<Integer, Set<DivisorPairWithPrime>>();
+        
+        public void add(DivisorPairWithPrime divisorPairWithPrime) {
+            Set<DivisorPairWithPrime> setForPrime = primeToSet.get(divisorPairWithPrime.primeResponsible);
+            if (setForPrime == null) {
+                setForPrime = new HashSet<DivisorPairWithPrime>();
+                primeToSet.put(divisorPairWithPrime.primeResponsible, setForPrime);
+            }
+            setForPrime.add(divisorPairWithPrime);
+        }
+
+        private final Set<DivisorPairWithPrime> distinct = new HashSet<DivisorPairWithPrime>();
+        private final Set<DivisorPair> intersection = new HashSet<DivisorPair>();
+        
+        //FIXME: second method depends on the first being called
+        public Set<DivisorPairWithPrime> getDistinct() {
+            for (Set<DivisorPairWithPrime> divisorPairSet : primeToSet.values()) {
+                for (DivisorPairWithPrime divisor : divisorPairSet) {
+                    if (intersection.contains(divisor)) {
+                        continue;
+                    }
+                    if (!distinct.add(divisor)) {
+                        distinct.remove(divisor);
+                        intersection.add(divisor);
+                    }
+                }
+            }
+            return distinct;
+        }
+        
+        public Set<DivisorPair> getIntersection() {
+            return intersection;
+        }
+       
+    }
+    
+    public static class GeneratedDivisorPairs {
+        
+        public GeneratedDivisorPairs(Set<DivisorPairWithPrime> divisorPairWithPrime, 
+                Set<DivisorPair> intersectionPairs, Set<DivisorPair> suprisePairs) {
+            this.divisorPairWithPrime = divisorPairWithPrime;
+            this.intersectionPairs = intersectionPairs;
+            this.suprisePairs = suprisePairs;
+        }
+        
+        public final Set<DivisorPairWithPrime> divisorPairWithPrime;
+        public final Set<DivisorPair> intersectionPairs;
+        public final Set<DivisorPair> suprisePairs;
     }
 }

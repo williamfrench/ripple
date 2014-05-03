@@ -9,6 +9,8 @@ import java.util.Set;
 
 import misc.Pixmap;
 import calculate.Factoriser.DivisorPair;
+import calculate.Factoriser.DivisorPairWithPrime;
+import calculate.Factoriser.GeneratedDivisorPairs;
 
 
 public class Creator {
@@ -39,38 +41,29 @@ public class Creator {
     private synchronized BufferedImage paint() {
         currentPixmap = new Pixmap(N-1, N-1);
         divisorPairs = new HashSet<List<Integer>>();
+        Color[][] triangle = null;
         
-        
-        //make centre around middle, not right hand side?
-        Color[][] triangle = new Color[N-1][];
-        
-        for (int row = 1; row <= (N+1)/2; row++) {
-            // :/
-            if (!colorPicker.noBackground()) {
+        if (!colorPicker.noBackground()) {
+            //make centre around middle, not right hand side?
+            triangle = new Color[N-1][];
+            
+            for (int row = 1; row <= (N+1)/2; row++) {
                 triangle[row-1] = new Color[row];
                 triangle[N-row-1] = new Color[row];
-            }
-            for (int col = 1; col <= row; col++) {
-                int product = (row*col)%N;
-                if (product == 0) {
-                    divisorPairs.add(Arrays.asList(new Integer[]{row, col}));
-                    divisorPairs.add(Arrays.asList(new Integer[]{N-row, col}));
-                }
-                float s1Value = ((float)product)/((float)N);
-                // :/
-                if (!colorPicker.noBackground()) {
+                for (int col = 1; col <= row; col++) {
+                    int product = (row*col)%N;
+                    float s1Value = ((float)product)/((float)N);
+                    // :/
                     triangle[row-1][col-1] = colorPicker.getColor(s1Value);
                     triangle[N-row-1][col-1] = colorPicker.getColor(1-s1Value);                
                 }
             }
         }
-        
 
         //XXX: swap iteration around?
         for (int row = 1; row <= N-1; row++) {
             for (int col = 1; col <= Math.min(row, N-row); col++) {
                 Color color;
-                //  :/
                 if (!colorPicker.noBackground()) {
                     color = triangle[row-1][col-1];
                 } else {
@@ -84,9 +77,9 @@ public class Creator {
             }
         }
         
-        List<Set<DivisorPair>> standardPairs = Factoriser.generateDivisorPairs(N);
+        GeneratedDivisorPairs divisorPairs = Factoriser.generateDivisorPairs(N);
         
-        for (DivisorPair divisorPair : standardPairs.get(0)) {
+        for (DivisorPairWithPrime divisorPair : divisorPairs.divisorPairWithPrime) {
             Color divisorColor = SmallPrimes.majorScaleColors.get(divisorPair.primeResponsible);
             if (divisorColor == null) {
                 System.out.println(divisorPair.primeResponsible);
@@ -95,19 +88,19 @@ public class Creator {
 
         }
         
-        for (DivisorPair divisorPair: Factoriser.generateDivisorPairs(N).get(1)) {
+        for (DivisorPair divisorPair: divisorPairs.intersectionPairs) {
             doStuff(divisorPair, INTERSECTION_COLOR);
         }
         
-        if (!divisorPairs.isEmpty() && showSuprising) {
+        if (showSuprising) {
             //System.out.println(N + " " + divisorPairs);
-            for (List<Integer> divisorPair : divisorPairs) {
+            for (DivisorPair divisorPair : divisorPairs.suprisePairs) {
                 //XXX copy and paste aaaah
                 for (int[] coords : neighbours) {
-                    currentPixmap.setColor(divisorPair.get(0)-1+coords[0], divisorPair.get(1)-1+coords[1], SUPRISE_COLOR);
-                    currentPixmap.setColor(divisorPair.get(1)-1+coords[0], divisorPair.get(0)-1+coords[1], SUPRISE_COLOR);
-                    currentPixmap.setColor(N-divisorPair.get(0)-1+coords[0], N-divisorPair.get(1)-1+coords[1], SUPRISE_COLOR);
-                    currentPixmap.setColor(N-divisorPair.get(1)-1+coords[0], N-divisorPair.get(0)-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(N-divisorPair.a-1+coords[0], N-divisorPair.b-1+coords[1], SUPRISE_COLOR);
+                    currentPixmap.setColor(N-divisorPair.a-1+coords[0], N-divisorPair.b-1+coords[1], SUPRISE_COLOR);
                 }
             }
         }
