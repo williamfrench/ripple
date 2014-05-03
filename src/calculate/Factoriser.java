@@ -69,7 +69,7 @@ public class Factoriser {
         for (List<Integer> tuple : factorised) {
             List<Divisor> newDivisors = new ArrayList<Divisor>();
             int primePower = 1;
-            for (int i=0; i<=tuple.get(1); i++) {
+            for (int i=0; i<tuple.get(1); i++) {
                 primePower*=tuple.get(0);
                 for (Divisor divisor : divisors) {
                     int product = divisor.divisor*primePower;

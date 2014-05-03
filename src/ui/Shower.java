@@ -233,7 +233,7 @@ public class Shower extends Thread {
                     play = false;
                 }
                 justFuckOffAndSleep(Math.max(FRAME_MILLIS + (int)(System.currentTimeMillis() - then), 0));
-                //System.out.println(System.currentTimeMillis() - then + " " + i);
+                System.out.println(System.currentTimeMillis() - then + " " + i);
             }
         }
     }
