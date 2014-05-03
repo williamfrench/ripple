@@ -28,7 +28,7 @@ public class Shower extends Thread {
     private final NumberShower numberShower;
     private final JFrame masterFrame;
     
-    private int FRAME_MILLIS = 256;
+    private int FRAME_MILLIS = 200;
     private boolean play = false;
     private boolean showImage = true;
     private int i = 1;
@@ -141,7 +141,7 @@ public class Shower extends Thread {
             @Override
             public void keyTyped(KeyEvent event) {
                 if (event.getKeyChar() == 'i') {
-                    FRAME_MILLIS>>=1;  
+                    FRAME_MILLIS/=1.1;  
                     p.p(FRAME_MILLIS);
                 }
             }
@@ -153,8 +153,8 @@ public class Shower extends Thread {
                     if (FRAME_MILLIS == 0) {
                         FRAME_MILLIS = 1;
                         p.p(FRAME_MILLIS);
-                    } else if (FRAME_MILLIS < Integer.MAX_VALUE) {
-                        FRAME_MILLIS<<=1;
+                    } else if (FRAME_MILLIS < (Integer.MAX_VALUE/1.1)) {
+                        FRAME_MILLIS*=1.1;
                         p.p(FRAME_MILLIS);
                     }
                 }
