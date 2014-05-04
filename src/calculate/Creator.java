@@ -4,20 +4,22 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Set;
 
 import misc.Pixmap;
 import calculate.Factoriser.DivisorPair;
-import calculate.Factoriser.DivisorPairWithPrime;
 import calculate.Factoriser.GeneratedDivisorPairs;
 
 
 public class Creator {
 
+    private static final int lingerPeriod = 100;
+    private static final LinkedList<Set<DivisorPair>> vapourTrail = new LinkedList<Set<DivisorPair>>();
+    
     private static final Color INTERSECTION_COLOR = Color.black;
     private static final Color SUPRISE_COLOR = Color.white;
-    private static final Color NO_BACKGROUND_COLOR = Color.gray;
+    private static final Color NO_BACKGROUND_COLOR = Color.BLACK;
     
     private static final int[][] possibleNeighbours = new int[][] {
         new int[]{0,0},
@@ -30,7 +32,6 @@ public class Creator {
     private final ColorPicker colorPicker = new ColorPicker();
     
     private Pixmap currentPixmap;
-    private Set<List<Integer>> divisorPairs;
     private int N;
     private boolean showUnsuprising = true;
     private boolean showSuprising = true;
@@ -40,7 +41,6 @@ public class Creator {
     //could I preempt the need for this synchronized keyword?
     private synchronized BufferedImage paint() {
         currentPixmap = new Pixmap(N-1, N-1);
-        divisorPairs = new HashSet<List<Integer>>();
         Color[][] triangle = null;
         
         if (!colorPicker.noBackground()) {
@@ -53,7 +53,6 @@ public class Creator {
                 for (int col = 1; col <= row; col++) {
                     int product = (row*col)%N;
                     float s1Value = ((float)product)/((float)N);
-                    // :/
                     triangle[row-1][col-1] = colorPicker.getColor(s1Value);
                     triangle[N-row-1][col-1] = colorPicker.getColor(1-s1Value);                
                 }
@@ -79,33 +78,76 @@ public class Creator {
         
         GeneratedDivisorPairs divisorPairs = Factoriser.generateDivisorPairs(N);
         
-        for (DivisorPairWithPrime divisorPair : divisorPairs.divisorPairWithPrime) {
-            Color divisorColor = SmallPrimes.majorScaleColors.get(divisorPair.primeResponsible);
-            if (divisorColor == null) {
-                System.out.println(divisorPair.primeResponsible);
-            }
-            doStuff(divisorPair, divisorColor);
-
+        Set<DivisorPair> mergedDivisorPairs = new HashSet<DivisorPair>(divisorPairs.divisorPairWithPrime);
+        mergedDivisorPairs.addAll(divisorPairs.intersectionPairs);
+        mergedDivisorPairs.addAll(divisorPairs.suprisePairs);
+        
+        vapourTrail.addFirst(mergedDivisorPairs);
+        if (vapourTrail.size() > lingerPeriod) {
+            vapourTrail.removeLast();
         }
         
-        for (DivisorPair divisorPair: divisorPairs.intersectionPairs) {
-            doStuff(divisorPair, INTERSECTION_COLOR);
-        }
-        
-        if (showSuprising) {
-            //System.out.println(N + " " + divisorPairs);
-            for (DivisorPair divisorPair : divisorPairs.suprisePairs) {
-                //XXX copy and paste aaaah
+        for (int i=0; i<vapourTrail.size()-1; i++) {
+            float blackness = (float)i/(float)lingerPeriod;
+            int flipped = vapourTrail.size()-i-1;
+            for (DivisorPair divisorPair : vapourTrail.get(flipped)) {
                 for (int[] coords : neighbours) {
-                    currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], SUPRISE_COLOR);
-                    currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], SUPRISE_COLOR);
-                    currentPixmap.setColor(N-divisorPair.a-1+coords[0], N-divisorPair.b-1+coords[1], SUPRISE_COLOR);
-                    currentPixmap.setColor(N-divisorPair.a-1+coords[0], N-divisorPair.b-1+coords[1], SUPRISE_COLOR);
+                    doShiftedColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], blackness, (float)N/(float)(N-flipped));
+                    doShiftedColor(divisorPair.b-1+coords[0], divisorPair.a-1+coords[1], blackness, (float)N/(float)(N-flipped));
                 }
             }
         }
+        
+        
+//        for (DivisorPairWithPrime divisorPair : divisorPairs.divisorPairWithPrime) {
+//            Color divisorColor = SmallPrimes.majorScaleColors.get(divisorPair.primeResponsible);
+//            if (divisorColor == null) {
+//                System.out.println(divisorPair.primeResponsible);
+//            }
+//            doStuff(divisorPair, divisorColor);
+//
+//        }
+//        
+//        for (DivisorPair divisorPair: divisorPairs.intersectionPairs) {
+//            doStuff(divisorPair, INTERSECTION_COLOR);
+//        }
+//        
+//        if (showSuprising) {
+//            //System.out.println(N + " " + divisorPairs);
+//            for (DivisorPair divisorPair : divisorPairs.suprisePairs) {
+//                //XXX copy and paste aaaah
+//                for (int[] coords : neighbours) {
+//                    currentPixmap.setColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], SUPRISE_COLOR);
+//                    currentPixmap.setColor(divisorPair.b-1+coords[0], divisorPair.a-1+coords[1], SUPRISE_COLOR);
+//                }
+//            }
+//        }
         return currentPixmap.getImage();
     }
+    
+     
+    
+    private void doShiftedColor(int x, int y, float colorRatio, float ratio) {
+        float new_x = x*ratio;
+        float new_y = y*ratio;
+        
+        
+        int x_int = (int)new_x; float x_fl = new_x-x_int;
+        int y_int = (int)new_y; float y_fl = new_y-y_int;
+       
+        doPoint(x_int, y_int, (1-x_fl)*(1-y_fl));
+        doPoint(x_int+1, y_int, (x_fl)*(1-y_fl));
+        doPoint(x_int, y_int+1, (1-x_fl)*(y_fl));
+        doPoint(x_int+1, y_int, (x_fl)*(y_fl));
+        //p.p(new_x + " " + new_y + " " + x_fl + " " + y_fl + " ");
+
+    }
+    
+    private void doPoint(int x, int y, float colorf) {
+        Color color = new Color(colorf, colorf, colorf);
+        currentPixmap.setColor(x, y, color);
+    }
+
     
     private void doStuff(DivisorPair divisorPair, Color divisorColor) {
         if (showUnsuprising) {
@@ -114,19 +156,8 @@ public class Creator {
                 currentPixmap.setColor(divisorPair.b-1+coords[0], divisorPair.a-1+coords[1], divisorColor);
             }
         }
-        divisorPairs.remove(Arrays.asList(divisorPair.a, divisorPair.b));
-        divisorPairs.remove(Arrays.asList(divisorPair.b, divisorPair.a));
     }
 
-    //a bit iffy all this really
-    private Integer[][] getCombos(int row, int col) {
-        int mrow = N-row; int mcol = N-col;
-        return new Integer[][]{
-            new Integer[]{row, col}, new Integer[]{mrow, mcol}, new Integer[]{col, row}, new Integer[]{mcol, mrow},
-            new Integer[]{mrow, col}, new Integer[]{row, mcol}, new Integer[]{mcol, row}, new Integer[]{col, mrow},
-        };
-        
-    }
     
     //XXX: should these really be returning paint()?
     /////////////////////////////////////////////////////////
