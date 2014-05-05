@@ -36,6 +36,7 @@ public class Shower extends Thread {
         
     public Shower() throws IOException, MidiUnavailableException {
         noiseMachine = new NoiseMachine();
+        noiseMachine.toggleMute();
         creator = new Creator();
         
         masterFrame = getMeAFrame(1024,830);
@@ -263,6 +264,10 @@ public class Shower extends Thread {
 
         public static void p(int out) {
             p.p(""+out);
+        }
+
+        public static void p(float colorf) {
+            p.p(""+colorf);
         }
     }
 }
