@@ -11,7 +11,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
-import calculate.SmallPrimes;
+import calculate.maths.SmallPrimes;
 
 
 public class NumberShower   {

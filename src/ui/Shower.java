@@ -258,16 +258,8 @@ public class Shower extends Thread {
     }
     
     public static final class p {
-        public static void p(String out) {
+        public static void p(Object out) {
             System.out.println(out);
-        }
-
-        public static void p(int out) {
-            p.p(""+out);
-        }
-
-        public static void p(float colorf) {
-            p.p(""+colorf);
         }
     }
 }

@@ -1,6 +1,7 @@
 package calculate;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,9 +10,12 @@ import java.util.Set;
 
 import misc.Pixmap;
 import ui.Shower.p;
-import calculate.Factoriser.DivisorPair;
-import calculate.Factoriser.DivisorPairWithPrime;
-import calculate.Factoriser.GeneratedDivisorPairs;
+import calculate.maths.Factoriser;
+import calculate.maths.Factoriser.DivisorPair;
+import calculate.maths.Factoriser.DivisorPairWithPrime;
+import calculate.maths.Factoriser.GeneratedDivisorPairs;
+import calculate.maths.OneModFinder;
+import calculate.maths.SmallPrimes;
 
 
 public class Creator {
@@ -19,10 +23,11 @@ public class Creator {
     private static final int lingerPeriod = 10000;
     private static final LinkedList<Set<DivisorPair>> vapourTrail = new LinkedList<Set<DivisorPair>>();
     private final boolean letsVapourTrail = false;
+    private final boolean remOne = true;
     
     private static final Color INTERSECTION_COLOR = Color.black;
     private static final Color SUPRISE_COLOR = Color.white;
-    private static final Color NO_BACKGROUND_COLOR = Color.BLACK;
+    private static final Color NO_BACKGROUND_COLOR = Color.WHITE;
     
     private static final int[][] possibleNeighbours = new int[][] {
         new int[]{0,0},
@@ -82,10 +87,25 @@ public class Creator {
         GeneratedDivisorPairs divisorPairs = Factoriser.generateDivisorPairs(N);
         
         if (letsVapourTrail) {
-            Set<DivisorPair> mergedDivisorPairs = new HashSet<DivisorPair>(divisorPairs.suprisePairs);
-            mergedDivisorPairs.addAll(divisorPairs.intersectionPairs);
-            mergedDivisorPairs.addAll(divisorPairs.divisorPairWithPrime);
-            
+            Set<DivisorPair> mergedDivisorPairs;
+        
+            if (!remOne) {
+                mergedDivisorPairs = new HashSet<DivisorPair>(divisorPairs.suprisePairs);
+                mergedDivisorPairs.addAll(divisorPairs.intersectionPairs);
+                mergedDivisorPairs.addAll(divisorPairs.divisorPairWithPrime);
+            } else {
+                mergedDivisorPairs = OneModFinder.oneModN(N);
+//                mergedDivisorPairs = new HashSet<DivisorPair>();
+//                for (int row = 1; row <= N; row++) {
+//                    for (int col = 1; col <= row; col++) {
+//                        //if ((row*col)%N!=0 && (row*col)%N<=N/500) {
+//                        if ((row*col)%N!=0 && (row*col)%N==1) {
+//
+//                            mergedDivisorPairs.add(new DivisorPair(row, col));
+//                        }
+//                    }
+//                }
+            }
             vapourTrail.addFirst(mergedDivisorPairs);
             if (vapourTrail.size() > lingerPeriod) {
                 vapourTrail.removeLast();
@@ -98,11 +118,8 @@ public class Creator {
                 float blackness = (float)i/(float)lingerPeriod;
                 int flipped = vapourTrail.size()-i-1;
                 for (DivisorPair divisorPair : vapourTrail.get(flipped)) {
-                    
-                    for (int[] coords : neighbours) {
-                        doShiftedColor(divisorPair.a-1+coords[0], divisorPair.b-1+coords[1], blackness, (float)N/(float)(N-flipped));
-                        doShiftedColor(divisorPair.b-1+coords[0], divisorPair.a-1+coords[1], blackness, (float)N/(float)(N-flipped));
-                    }
+                    doShiftedColor(divisorPair.a-1, divisorPair.b-1, blackness, (float)N/(float)(N-flipped));
+                    doShiftedColor(divisorPair.b-1, divisorPair.a-1, blackness, (float)N/(float)(N-flipped));
                 }
             }
         }
@@ -184,6 +201,9 @@ public class Creator {
     //XXX: should these really be returning paint()?
     /////////////////////////////////////////////////////////
     public BufferedImage setN(int N){
+        if (N != this.N+1) {
+            vapourTrail.clear();
+        }
         this.N = N;
         return paint();
     }
@@ -215,7 +235,13 @@ public class Creator {
     ////////////////////////////////////////////////////////
     
     public void writeToFile() throws IOException {
-        writeToFile("C:\\Users\\William\\Desktop\\ripple\\" + N + ".png");
+        int version=0;
+        String basePath = "C:\\Users\\William\\Desktop\\ripple\\", fileName;
+        do {
+            fileName = basePath + N + "." + version++ + ".png";
+        } while (new File(fileName).exists()); {}
+        
+        writeToFile(fileName);
     }
     
     public void writeToFile(String file) throws IOException {
