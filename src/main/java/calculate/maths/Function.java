@@ -40,7 +40,8 @@ public interface Function {
         }
     };
     
-
+    
+    
     
 //    Function TO_INVERSE_SQUARE = new Function() {
 //        @Override

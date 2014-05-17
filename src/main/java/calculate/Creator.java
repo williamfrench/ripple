@@ -42,12 +42,15 @@ public class Creator {
     
     private Pixmap currentPixmap;
     private int N;
-    private boolean showUnsuprising = true;
-    private boolean showSuprising = true;
+    private boolean showUnsuprising = false;
+    private boolean showSuprising = false;
     private int thickness = 3;
     private int[][] neighbours = Arrays.copyOf(possibleNeighbours, 9);
     private final Function[] functions = new Function[]{Function.NONE, Function.TO_CIRCLE, Function.TO_INVERSE_CIRCLE};
     private int currentFunction = 0;
+    private int squareSize = 3;
+    private int offset1 = 0;
+    private int offset2 = 0;
     
     //could I preempt the need for this synchronized keyword?
     private synchronized BufferedImage paint() {
@@ -86,6 +89,9 @@ public class Creator {
                 currentPixmap.setColor(N-row-1, N-col-1, color);
             }
         }
+        if (squareSize != 1) {
+            filterPixmap(currentPixmap);
+        }   
         
         GeneratedDivisorPairs divisorPairs = Factoriser.generateDivisorPairs(N);
         
@@ -179,6 +185,19 @@ public class Creator {
         }
     }
 
+    private void filterPixmap(Pixmap pixmap) {
+        int x = 0; int y = 0;
+        for (x=-offset1;x<N;x+=squareSize) {
+            for (y=-offset2;y<N;y+=squareSize) {
+                for (int i=0;i<squareSize;i++) {
+                    for (int j=0;j<squareSize;j++) {
+                        pixmap.setColor(x+i, y+j, pixmap.getColor(x, y));
+                    }
+                }
+            }
+        }
+    }
+    
     private void transformPixmap(Function function) {
         Pixmap newPixmap = new Pixmap(N-1,N-1);
         for (int i=0; i<N; i++) {
@@ -299,6 +318,20 @@ public class Creator {
         return paint();
     }
     
+    public BufferedImage changeOffset(boolean one, boolean up) {
+        if (one) {
+            offset1 = changeSize(up, offset1);
+        } else {
+            offset2 = changeSize(up, offset2);
+        }
+        return paint();
+    }
+    
+    public BufferedImage changeSquareSize(boolean up) {
+        squareSize = up ? squareSize+1 : Math.max(squareSize-1,1);
+        return paint();
+    }
+    
     public BufferedImage cycleFunction() {
         currentFunction++;
         if (currentFunction == functions.length) {
@@ -309,6 +342,7 @@ public class Creator {
     
     ////////////////////////////////////////////////////////
     
+
     public void writeToFile() throws IOException {
         int version=0;
         String basePath = "C:\\Users\\William\\Desktop\\ripple\\", fileName;
@@ -323,4 +357,15 @@ public class Creator {
         currentPixmap.write(file);
     }
     
+    private int changeSize(boolean up, int what) {
+        if (up) {
+            what++;
+        } else {
+            what--;
+            if (what < 1) {
+                what+=N;
+            }
+        }
+        return what;
+    }
 }

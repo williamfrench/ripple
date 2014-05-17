@@ -214,7 +214,63 @@ public class Shower extends Thread {
                 }
             }
         });
-
+        
+        /////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////
+        ////////fiters:
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == '[') {
+                    theBigPicture.setIcon(new ImageIcon(creator.changeOffset(false, true)));
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == '\'') {
+                    theBigPicture.setIcon(new ImageIcon(creator.changeOffset(false, false)));
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+               if (event.getKeyChar() == ';') {
+                    theBigPicture.setIcon(new ImageIcon(creator.changeOffset(true, true)));
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == '#') {
+                    theBigPicture.setIcon(new ImageIcon(creator.changeOffset(true, false)));
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == ']') {
+                    theBigPicture.setIcon(new ImageIcon(creator.changeSquareSize(false)));
+                }
+            }
+        });
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent event) {
+                if (event.getKeyChar() == '=') {
+                    theBigPicture.setIcon(new ImageIcon(creator.changeSquareSize(true)));
+                }
+            }
+        });
+        ///////:filters
+        /////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////
+        
+        
         frame.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
